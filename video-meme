@@ -3,6 +3,8 @@
 text_size=75
 show_img=0
 POSITIONAL_ARGS=()
+TMP_IMAGE_FOLDER='/tmp/'
+
 while [[ $# -gt 0 ]]; do
 	case $1 in
 		--textsize)
@@ -22,13 +24,19 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
+
+make_random_name (){
+	RESULT=`echo $RANDOM | md5sum | head -c 20`
+	echo ${RESULT}.png
+}
+
 get_video_size () {
 	ffprobe -v error -show_entries stream=width -of csv=p=0:s=x $1
 }
 
 #~ -pointsize $text_size 
 make_image () {
-	echo $1 $2
+	echo $1 $2 $3
 	convert \
 		-background white \
 		-fill black \
@@ -37,16 +45,29 @@ make_image () {
 		-size $1x \
 		-gravity center \
 		caption:"${2}" \
-		./out.png
+		"${3}"
+}
+
+make_video (){
+	echo "make_video args: "
+	echo $1 $2 $3
+	ffmpeg -loglevel warning -y -i $2 \
+	-i $1 \
+	-filter_complex \
+	"[1:v]pad=iw:ih+`identify -format '%h' $2`:0:oh-ih,overlay=0:0" \
+	"${3}"
 }
 
 set -- "${POSITIONAL_ARGS[@]}"
-#~ echo $1 $2
-make_image $(get_video_size $1) "$2"
+echo 'Creating image'
+IMG_NAME="tmp_img_out_9483938.png"
+IMG_PATH="${TMP_IMAGE_FOLDER}${IMG_NAME}"
+make_image $(get_video_size $1) "$2" $IMG_PATH
 
 if [[ show_img -eq 1 ]];
 then
-	xdg-open ./out.png
+	echo 'Opening image'
+	xdg-open $IMG_PATH
 	echo -n "Want to continue? [Y/n]: "
 	read opt
 	
@@ -56,4 +77,9 @@ then
 	fi
 fi
 
+echo 'Processing video...'
+make_video $1 $IMG_PATH $3
 
+echo 'Video finished'
+echo 'Deleting image'
+rm $IMG_PATH
