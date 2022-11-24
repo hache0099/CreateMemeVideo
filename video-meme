@@ -1,27 +1,59 @@
 #!/bin/bash
 
 text_size=75
-
-#for var in $*; do
-#	echo $var
-#	case $var in
-#		--textsize) text_size=$var;;
-#	esac;
-#done
+show_img=0
+POSITIONAL_ARGS=()
+while [[ $# -gt 0 ]]; do
+	case $1 in
+		--textsize)
+			text_size=$2
+			shift
+			shift
+			;;
+		--showimage)
+			show_img=1
+			shift
+			shift
+			;;
+		*)
+			POSITIONAL_ARGS+=("$1")
+			shift
+			;;
+	esac
+done
 
 get_video_size () {
 	ffprobe -v error -show_entries stream=width -of csv=p=0:s=x $1
 }
 
+#~ -pointsize $text_size 
 make_image () {
+	echo $1 $2
 	convert \
 		-background white \
-		-pointsize $text_size \
 		-fill black \
+		-font impact.ttf \
+		-pointsize $text_size \
 		-size $1x \
 		-gravity center \
-		caption:$2 \
+		caption:"${2}" \
 		./out.png
 }
-echo $1 $2
-make_image $(get_video_size $1) $2
+
+set -- "${POSITIONAL_ARGS[@]}"
+#~ echo $1 $2
+make_image $(get_video_size $1) "$2"
+
+if [[ show_img -eq 1 ]];
+then
+	xdg-open ./out.png
+	echo -n "Want to continue? [Y/n]: "
+	read opt
+	
+	if [[ $opt =~ ^[Nn]$ ]];
+	then
+		exit 0;
+	fi
+fi
+
+
