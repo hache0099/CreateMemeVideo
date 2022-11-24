@@ -1,0 +1,27 @@
+#!/bin/bash
+
+text_size=75
+
+#for var in $*; do
+#	echo $var
+#	case $var in
+#		--textsize) text_size=$var;;
+#	esac;
+#done
+
+get_video_size () {
+	ffprobe -v error -show_entries stream=width -of csv=p=0:s=x $1
+}
+
+make_image () {
+	convert \
+		-background white \
+		-pointsize $text_size \
+		-fill black \
+		-size $1x \
+		-gravity center \
+		caption:$2 \
+		./out.png
+}
+echo $1 $2
+make_image $(get_video_size $1) $2
