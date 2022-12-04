@@ -4,6 +4,7 @@ text_size=75
 show_img=0
 POSITIONAL_ARGS=()
 TMP_IMAGE_FOLDER='/tmp/'
+FONT='helvetica'
 
 while [[ $# -gt 0 ]]; do
 	case $1 in
@@ -14,6 +15,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--showimage)
 			show_img=1
+			shift
+			;;
+		--font)
+			FONT=$2
 			shift
 			shift
 			;;
@@ -31,16 +36,16 @@ make_random_name (){
 }
 
 get_video_size () {
-	ffprobe -v error -show_entries stream=width -of csv=p=0:s=x $1
+	ffprobe -v error -show_entries stream=width -of csv=p=0:s=x "${1}"
 }
 
 #~ -pointsize $text_size 
 make_image () {
-	echo $1 $2 $3
+	echo $1 $2 $3 $FONT
 	convert \
 		-background white \
 		-fill black \
-		-font impact.ttf \
+		-font $FONT \
 		-pointsize $text_size \
 		-size $1x \
 		-gravity center \
@@ -51,8 +56,8 @@ make_image () {
 make_video (){
 	echo "make_video args: "
 	echo $1 $2 $3
-	ffmpeg -loglevel warning -y -i $2 \
-	-i $1 \
+	ffmpeg -loglevel warning -y -i "${2}" \
+	-i "${1}" \
 	-filter_complex \
 	"[1:v]pad=iw:ih+`identify -format '%h' $2`:0:oh-ih,overlay=0:0" \
 	"${3}"
@@ -62,7 +67,7 @@ set -- "${POSITIONAL_ARGS[@]}"
 echo 'Creating image'
 IMG_NAME="tmp_img_out_9483938.png"
 IMG_PATH="${TMP_IMAGE_FOLDER}${IMG_NAME}"
-make_image $(get_video_size $1) "$2" $IMG_PATH
+make_image $(get_video_size "${1}") "$2" $IMG_PATH
 
 if [[ show_img -eq 1 ]];
 then
@@ -78,7 +83,7 @@ then
 fi
 
 echo 'Processing video...'
-make_video $1 $IMG_PATH $3
+make_video "${1}" $IMG_PATH "${3}"
 
 echo 'Video finished'
 echo 'Deleting image'
