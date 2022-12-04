@@ -53,6 +53,18 @@ make_image () {
 		"${3}"
 }
 
+open_image() {
+	echo 'Opening image'
+	xdg-open $IMG_PATH
+	echo -n "Want to continue? [Y/n]: "
+	read opt
+	
+	if [[ $opt =~ ^[Nn]$ ]];
+	then
+		exit 0;
+	fi
+}
+
 make_video (){
 	echo "make_video args: "
 	echo $1 $2 $3
@@ -71,15 +83,7 @@ make_image $(get_video_size "${1}") "$2" $IMG_PATH
 
 if [[ show_img -eq 1 ]];
 then
-	echo 'Opening image'
-	xdg-open $IMG_PATH
-	echo -n "Want to continue? [Y/n]: "
-	read opt
-	
-	if [[ $opt =~ ^[Nn]$ ]];
-	then
-		exit 0;
-	fi
+	open_image
 fi
 
 echo 'Processing video...'
@@ -87,4 +91,4 @@ make_video "${1}" $IMG_PATH "${3}"
 
 echo 'Video finished'
 echo 'Deleting image'
-rm $IMG_PATH
+rm -f $IMG_PATH
