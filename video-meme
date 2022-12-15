@@ -14,8 +14,8 @@ help_text () {
 	done <<-EOF
 
 	Usage:
-	  ${0##*/} [<VIDEO_PATH>] [<TEXT>] [--textsize SIZE]
-	  	[--showimage] [--font FONT | --font <FONT_FILE_PATH>]
+	  ${0##*/} VIDEO_PATH TEXT [--textsize SIZE]
+	  	[--showimage] [--font FONT | --font <FONT_FILE_PATH>] OUTPUT_FILE
 	
 	Options
 	  --textsize SIZE	Set the size of the text (default 75)
@@ -25,9 +25,54 @@ help_text () {
 	EOF
 }
 
+help_text_short () {
+	echo "Usage: ${0##*/} [<VIDEO_PATH>] [<TEXT>] [--textsize SIZE]"
+	echo "	[--showimage] [--font FONT | --font <FONT_FILE_PATH>] OUTPUT_FILE"
+	echo "Use -h to get full help"
+}
+
+is_number () {
+	if [[ ! $1 =~ ^[0-9]+$ ]];
+	then
+		echo "Bad argument"
+		help_text_short
+		exit 1
+	fi
+}
+
+font_exists () {
+	local FONT_LIST=( `convert -list font | grep -E "Font" | cut -c 9-` )
+	local EXISTS=0
+	for i in "${FONT_LIST[@]}"
+	do
+		if [ "$i" = "${1}" ];
+		then
+			EXISTS=1
+			break
+		fi
+	done
+
+	if [ $EXISTS -eq 0 ];
+	then
+		if [ ! -s "${1}" ]
+		then
+			echo "Font \`${1}\` does not exist"
+			help_text_short
+			exit 1
+		fi
+	fi
+}
+
+if [[ $# -eq 0 ]];
+then
+	help_text_short
+	exit 0
+fi
+
 while [[ $# -gt 0 ]]; do
 	case $1 in
 		--textsize)
+			is_number $2
 			text_size=$2
 			shift
 			shift
@@ -37,6 +82,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		--font)
+			font_exists $2
 			FONT=$2
 			shift
 			shift
@@ -64,6 +110,7 @@ get_video_size () {
 
 #~ -pointsize $text_size 
 make_image () {
+	set -e
 	echo $1 $2 $3 $FONT
 	convert \
 		-background white \
@@ -74,11 +121,12 @@ make_image () {
 		-gravity center \
 		caption:"${2}" \
 		"${3}"
+	set +e
 }
 
 open_image() {
 	echo 'Opening image'
-	xdg-open $IMG_PATH
+	xdg-open "${IMG_PATH}"
 	echo -n "Want to continue? [Y/n]: "
 	read opt
 	
@@ -99,10 +147,26 @@ make_video (){
 }
 
 set -- "${POSITIONAL_ARGS[@]}"
+
+if [[ ! -e "${1}" ]];
+then
+	echo "Video ${1} does not exist"
+	help_section_short
+	exit 1
+fi
+
+if [[ $# -lt 3 ]];
+then
+	echo "Missing argument(s)"
+	help_text_short
+	exit 1
+fi
+
 echo 'Creating image'
 IMG_NAME="tmp_img_out_9483938.png"
 IMG_PATH="${TMP_IMAGE_FOLDER}${IMG_NAME}"
-make_image $(get_video_size "${1}") "$2" $IMG_PATH
+
+make_image $(get_video_size "${1}") "$2" $IMG_PATH || (echo "Error creating image" && help_text_short)
 
 if [[ show_img -eq 1 ]];
 then
@@ -112,6 +176,7 @@ fi
 echo 'Processing video...'
 make_video "${1}" $IMG_PATH "${3}"
 
+
 echo 'Video finished'
 echo 'Deleting image'
-rm -f $IMG_PATH
+rm -f $IMG_PATH || echo
