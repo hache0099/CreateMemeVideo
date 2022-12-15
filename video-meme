@@ -6,6 +6,25 @@ POSITIONAL_ARGS=()
 TMP_IMAGE_FOLDER='/tmp/'
 FONT='helvetica'
 
+VERSION="0.1.0"
+
+help_text () {
+	while IFS= read -r line; do
+		printf "%s\n" "$line"
+	done <<-EOF
+
+	Usage:
+	  ${0##*/} [<VIDEO_PATH>] [<TEXT>] [--textsize SIZE]
+	  	[--showimage] [--font FONT | --font <FONT_FILE_PATH>]
+	
+	Options
+	  --textsize SIZE	Set the size of the text (default 75)
+	  --showimage		Show the caption image before making the video
+	  --font FONT		Set a font for the caption text (default: helvetica) 
+
+	EOF
+}
+
 while [[ $# -gt 0 ]]; do
 	case $1 in
 		--textsize)
@@ -22,6 +41,10 @@ while [[ $# -gt 0 ]]; do
 			shift
 			shift
 			;;
+		-h)
+			help_text
+			exit 0
+			;;
 		*)
 			POSITIONAL_ARGS+=("$1")
 			shift
@@ -30,10 +53,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 
-make_random_name (){
-	RESULT=`echo $RANDOM | md5sum | head -c 20`
-	echo ${RESULT}.png
-}
+#make_random_name (){
+#	RESULT=`echo $RANDOM | md5sum | head -c 20`
+#	echo ${RESULT}.png
+#}
 
 get_video_size () {
 	ffprobe -v error -show_entries stream=width -of csv=p=0:s=x "${1}"
@@ -68,7 +91,7 @@ open_image() {
 make_video (){
 	echo "make_video args: "
 	echo $1 $2 $3
-	ffmpeg -loglevel warning -y -i "${2}" \
+	ffmpeg -loglevel error -y -i "${2}" \
 	-i "${1}" \
 	-filter_complex \
 	"[1:v]pad=iw:ih+`identify -format '%h' $2`:0:oh-ih,overlay=0:0" \
