@@ -63,6 +63,26 @@ font_exists () {
 	fi
 }
 
+autosize_text () {
+	local VID_W=$1
+	local TEXT=$2
+	local FONT=$3
+	local SIZE=100
+	while [[ $SIZE -gt 20 ]]; do
+		local W=$(magick -debug annotate  xc: \
+			-font "${FONT}" -pointsize "${SIZE}" \
+			-annotate 0 "${TEXT}" null: 2>&1 | \
+			grep -iEo "width: [0-9]+(\.[0-9]+)?" | \
+			cut -d ' ' -f 2)
+		if [ $W -lt $1 ];
+		then
+			break
+		fi
+		let SIZE=--SIZE
+	done
+	echo $SIZE
+}
+
 if [[ $# -eq 0 ]];
 then
 	help_text_short
