@@ -1,6 +1,6 @@
 #!/bin/bash
 
-text_size=75
+text_size=""
 show_img=0
 POSITIONAL_ARGS=()
 TMP_IMAGE_FOLDER='/tmp/'
@@ -66,7 +66,7 @@ font_exists () {
 autosize_text () {
 	local VID_W=$1
 	local TEXT=$2
-	local FONT=$3
+	#local FONT=$3
 	local SIZE=100
 	while [[ $SIZE -gt 20 ]]; do
 		local W=$(magick -debug annotate  xc: \
@@ -182,11 +182,18 @@ then
 	exit 1
 fi
 
+
 echo 'Creating image'
 IMG_NAME="tmp_img_out_9483938.png"
 IMG_PATH="${TMP_IMAGE_FOLDER}${IMG_NAME}"
+VID_SIZE=$(get_video_size "${1}")
 
-make_image $(get_video_size "${1}") "$2" $IMG_PATH || (echo "Error creating image" && help_text_short)
+if [ -z $text_size ];
+then
+	text_size=$(autosize_text $VID_SIZE $2)	
+fi
+
+make_image $VID_SIZE "$2" $IMG_PATH || (echo "Error creating image" && help_text_short)
 
 if [[ show_img -eq 1 ]];
 then
