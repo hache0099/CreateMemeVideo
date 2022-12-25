@@ -64,13 +64,14 @@ font_exists () {
 }
 
 #### FIXME ####
-
 autosize_text () {
 	local VID_W=$1
 	local TEXT=$2
 	#local FONT=$3
 	local SIZE=100
+
 	while [[ $SIZE -gt 20 ]]; do
+		# TODO: Change everything here
 		local W=$(magick -debug annotate  xc: \
 			-font "${FONT}" -pointsize "${SIZE}" \
 			-annotate 0 "${TEXT}" null: 2>&1 | \
