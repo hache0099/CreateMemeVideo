@@ -10,7 +10,35 @@ This is a Shell script to put caption on top of videos (thus, making them memes)
 Just copy `video-meme` to your **$PATH** and make it executable (`sudo chmod +x $PATH/video-meme`)
 
 # Usage
-```   
+Simple example
+```
+$ video-meme input.mp4 "Your text here" output.mp4
+```
+
+To use a different font
+```
+$ video-meme --font <font> input.mp4 "<text>" output.mp4
+```
+You can use a font installed in your system or a custom font file (as long as it's supported by magick)
+
+To see a list of available fonts run 
+```
+$ convert -list font
+```
+
+To set the text size
+
+```
+$ video-meme --textsize <size> input.mp4 "<text>" output.mp4
+``` 
+
+If you want to see the caption image before the video is processed
+```
+$ video-meme --showimage input.mp4 "Your text here" output.mp4
+```
+
+Use `-h` to display the help message
+```
 video-meme <VIDEO_PATH> <TEXT> [--textsize SIZE]
 	[--showimage] [--font FONT | --font <FONT_FILE_PATH>] OUTPUT_FILE
 	
@@ -20,7 +48,3 @@ Options
 	--font FONT		Set a font for the caption text (default: helvetica)
 ```
 
-To see a list of available fonts run 
-```
-convert -list font
-```
