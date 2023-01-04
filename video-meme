@@ -5,6 +5,8 @@ show_img=0
 POSITIONAL_ARGS=()
 TMP_IMAGE_FOLDER='/tmp/'
 FONT='helvetica'
+AUTOT_MIN=33
+AUTOT_MAX=60
 
 VERSION="0.1.0"
 
@@ -65,18 +67,21 @@ font_exists () {
 
 #### FIXME ####
 autosize_text () {
-	local VID_W=$1
-	local TEXT=$2
-	#local FONT=$3
+	local VID_S=( $1 $2 )
+	local TEXT=$3
+	#local FONT=$4
 	local SIZE=100
 
 	while [[ $SIZE -gt 20 ]]; do
 		# TODO: Change everything here
-		local W=$(magick -debug annotate  xc: \
-			-font "${FONT}" -pointsize "${SIZE}" \
-			-annotate 0 "${TEXT}" null: 2>&1 | \
-			grep -iEo "width: [0-9]+(\.[0-9]+)?" | \
-			cut -d ' ' -f 2)
+		local TEXT_H=$( convert -fill black \
+			-background none \
+			-pointsize ${SIZE} \
+			-font ${FONT} \
+			caption:"${TEXT}" -trim info: \
+			| grep -iEo "[0-9]+x[0-9]+ " | \
+			cut -d 'x' -f 2)
+
 		if [ $W -lt $1 ];
 		then
 			break
@@ -128,7 +133,9 @@ done
 #}
 
 get_video_size () {
-	ffprobe -v error -show_entries stream=width -of csv=p=0:s=x "${1}"
+	local SIDE=$2
+	
+	ffprobe -v error -show_entries stream=${SIDE:-"width"} -of csv=p=0:s=x "${1}"
 }
 
 #~ -pointsize $text_size 
