@@ -101,7 +101,7 @@ get_video_size () {
 autosize_text () {
     #echo $1 $2
 	local VID_W=$1 
-    local VID_H=$2
+    	local VID_H=$2
 
 	local TEXT=$3
 	#local FONT=$4
@@ -111,7 +111,6 @@ autosize_text () {
 	#echo "Ideal Size: $IDEAL_SIZE"
 
 	while [[ $SIZE -gt 20 ]]; do
-		# TODO: Change everything here
 		local TEXT_H=$( convert -fill black \
 			-background none \
 			-size "${VID_W}x" \
