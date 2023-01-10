@@ -5,8 +5,8 @@ show_img=0
 POSITIONAL_ARGS=()
 TMP_IMAGE_FOLDER='/tmp/'
 FONT='helvetica'
-AUTOT_MIN=33
-AUTOT_MAX=60
+AUTO_MIN=33
+AUTO_MAX=60
 
 VERSION="0.1.0"
 
@@ -71,18 +71,21 @@ autosize_text () {
 	local TEXT=$3
 	#local FONT=$4
 	local SIZE=100
+	
+	IDEAL_SIZE=$(printf "%.1f\n" $((10**1 * ${VID_S[1]} / 100 * $AUTO_MAX))e-1 | cut -d ',' -f 1)
 
 	while [[ $SIZE -gt 20 ]]; do
 		# TODO: Change everything here
 		local TEXT_H=$( convert -fill black \
 			-background none \
+			-size "${VID_S[0]}x" \
 			-pointsize ${SIZE} \
 			-font ${FONT} \
 			caption:"${TEXT}" -trim info: \
 			| grep -iEo "[0-9]+x[0-9]+ " | \
 			cut -d 'x' -f 2)
 
-		if [ $W -lt $1 ];
+		if [ $TEXT_H -lt $IDEAL_SIZE ];
 		then
 			break
 		fi
