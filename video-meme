@@ -1,12 +1,12 @@
 #!/bin/bash
 
-text_size=75
+FONT="helvetica"
+text_size=""
 show_img=0
-POSITIONAL_ARGS=()
 TMP_IMAGE_FOLDER='/tmp/'
-FONT='helvetica'
-
-VERSION="0.1.0"
+AUTO_MIN=33
+AUTO_MAX=65
+POSITIONAL_ARGS=( )
 
 help_text () {
 	while IFS= read -r line; do
@@ -29,15 +29,6 @@ help_text_short () {
 	echo "Usage: ${0##*/} [<VIDEO_PATH>] [<TEXT>] [--textsize SIZE]"
 	echo "	[--showimage] [--font FONT | --font <FONT_FILE_PATH>] OUTPUT_FILE"
 	echo "Use -h to get full help"
-}
-
-is_number () {
-	if [[ ! $1 =~ ^[0-9]+$ ]];
-	then
-		echo "Bad argument"
-		help_text_short
-		exit 1
-	fi
 }
 
 font_exists () {
@@ -63,11 +54,14 @@ font_exists () {
 	fi
 }
 
-if [[ $# -eq 0 ]];
-then
-	help_text_short
-	exit 0
-fi
+is_number () {
+	if [[ ! $1 =~ ^[0-9]+$ ]];
+	then
+		echo "Bad argument"
+		help_text_short
+		exit 1
+	fi
+}
 
 while [[ $# -gt 0 ]]; do
 	case $1 in
@@ -98,17 +92,56 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-
-#make_random_name (){
-#	RESULT=`echo $RANDOM | md5sum | head -c 20`
-#	echo ${RESULT}.png
-#}
-
 get_video_size () {
-	ffprobe -v error -show_entries stream=width -of csv=p=0:s=x "${1}"
+	local SIDE=$2
+	
+	ffprobe -v error -show_entries stream=${SIDE:-"width"} -of csv=p=0:s=x "${1}"
 }
 
-#~ -pointsize $text_size 
+autosize_text () {
+    #echo $1 $2
+	local VID_W=$1 
+    	local VID_H=$2
+
+	local TEXT=$3
+	#local FONT=$4
+	local SIZE=100
+	
+	IDEAL_SIZE=$(printf "%.1f\n" $((10**1 * ${VID_H} / 100 * $AUTO_MAX))e-1 | cut -d ',' -f 1)
+	#echo "Ideal Size: $IDEAL_SIZE"
+
+	while [[ $SIZE -gt 20 ]]; do
+		local TEXT_H=$( convert -fill black \
+			-background none \
+			-size "${VID_W}x" \
+			-pointsize ${SIZE} \
+			-font ${FONT} \
+			caption:"${TEXT}" info: \
+			| grep -iEo "[0-9]+x[0-9]+ " | \
+			cut -d 'x' -f 2)
+
+		#echo "TEXT_H: $TEXT_H"
+		if [ $TEXT_H -le $IDEAL_SIZE ];
+		then
+			break
+		fi
+		let SIZE=--SIZE
+	done
+	echo $SIZE
+}
+
+open_image() {
+	echo 'Opening image'
+	xdg-open "${IMG_PATH}"
+	echo -n "Want to continue? [Y/n]: "
+	read opt
+	
+	if [[ $opt =~ ^[Nn]$ ]];
+	then
+		exit 0;
+	fi
+}
+
 make_image () {
 	set -e
 	echo $1 $2 $3 $FONT
@@ -122,18 +155,6 @@ make_image () {
 		caption:"${2}" \
 		"${3}"
 	set +e
-}
-
-open_image() {
-	echo 'Opening image'
-	xdg-open "${IMG_PATH}"
-	echo -n "Want to continue? [Y/n]: "
-	read opt
-	
-	if [[ $opt =~ ^[Nn]$ ]];
-	then
-		exit 0;
-	fi
 }
 
 make_video (){
@@ -162,15 +183,23 @@ then
 	exit 1
 fi
 
+
 echo 'Creating image'
 IMG_NAME="tmp_img_out_9483938.png"
 IMG_PATH="${TMP_IMAGE_FOLDER}${IMG_NAME}"
+VID_SIZE=$(get_video_size "${1}")
 
-make_image $(get_video_size "${1}") "$2" $IMG_PATH || (echo "Error creating image" && help_text_short)
+VID_SIZE_C=$(get_video_size "${1}" "width,height" | sed -e "s/x/ /")
 
-if [[ show_img -eq 1 ]];
+if [ -z $text_size ];
 then
-	open_image
+    text_size=$(autosize_text $VID_SIZE_C "${2}")
+    make_image $VID_SIZE "$2" $IMG_PATH
+fi
+
+if [ $show_img -eq 1 ];
+then
+    open_image
 fi
 
 echo 'Processing video...'
