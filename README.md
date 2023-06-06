@@ -10,7 +10,8 @@ This is a Shell script to put caption on top of videos (thus, making them memes)
 Just copy `video-meme` to your **$PATH** and make it executable (`sudo chmod +x $PATH/video-meme`)
 
 # Usage
-Simple example
+Simple example  
+If you use it this way, the script will try to find an optimal size for the text.
 ```
 $ video-meme input.mp4 "Your text here" output.mp4
 ```
@@ -27,7 +28,7 @@ $ convert -list font
 ```
 
 To set the text size
-
+(This will deactivate the auto-set-size feature)
 ```
 $ video-meme --textsize <size> input.mp4 "<text>" output.mp4
 ``` 
@@ -48,3 +49,5 @@ Options
 	--font FONT		Set a font for the caption text (default: helvetica)
 ```
 
+# Known bugs
+The _auto-set-font-size_ feature is experimental and very slow, for now is recommended to use the `--textsize` option
