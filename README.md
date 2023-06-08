@@ -50,4 +50,4 @@ Options
 ```
 
 # Known bugs
-The _auto-set-font-size_ feature is experimental and it may be very slow, if that's the case, it is recommended to use the `--textsize` option with `--showimage`
+The _auto-set-font-size_ feature is experimental and it may be slow, if that's the case, it is recommended to use the `--textsize` option with `--showimage`
